@@ -129,7 +129,7 @@ _download_clash() {
 function _valid_env() {
     [ "$(whoami)" != "root" ] && _error_quit "需要 root 或 sudo 权限执行"
     [ "$(ps -p $$ -o comm=)" != "bash" ] && _error_quit "当前终端不是 bash"
-    [ "$(ps -p 1 -o comm=)" != "systemd" ] && _error_quit "系统不具备 systemd"
+    # [ "$(ps -p 1 -o comm=)" != "systemd" ] && _error_quit "系统不具备 systemd"
 }
 
 function _valid_config() {

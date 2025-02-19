@@ -2,7 +2,7 @@
 # shellcheck disable=SC2155
 # clash快捷指令
 function clashon() {
-    sudo systemctl start clash && _okcat '已开启代理环境' ||
+    sudo service clash start && _okcat '已开启代理环境' ||
         _failcat '启动失败: 执行 "systemctl status clash" 查看日志' || return 1
     _get_port
     local proxy_addr=http://127.0.0.1:${PROXY_PORT}
@@ -13,7 +13,7 @@ function clashon() {
 }
 
 function clashoff() {
-    sudo systemctl stop clash && _okcat '已关闭代理环境' ||
+    sudo service clash stop && _okcat '已关闭代理环境' ||
         _failcat '关闭失败: 执行 "systemctl status clash" 查看日志' || return 1
     unset http_proxy
     unset https_proxy
@@ -92,7 +92,7 @@ _tunon() {
     _tunstatus 2>/dev/null && return 0
     sudo "$BIN_YQ" -i '.tun.enable = true' "$CLASH_CONFIG_MIXIN"
     _merge_config_restart
-    systemctl status clash | grep -qs 'unsupported kernel version' && {
+    service clash status | grep -qs 'unsupported kernel version' && {
         _tunoff >&/dev/null
         _error_quit '当前系统内核版本不支持'
     }
