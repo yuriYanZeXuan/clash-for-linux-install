@@ -3,7 +3,7 @@
 apt-get install -y bsdmainutils
 . script/common.sh
 . script/clashctl.sh
-echo "install begin"
+echo "123"
 _valid_env
 _get_os
 
