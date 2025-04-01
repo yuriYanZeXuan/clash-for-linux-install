@@ -8,7 +8,7 @@
 
 ### 环境要求
 
-- 需要 `root` 或 `sudo` 权限。
+- 需要 `root` 或 `` 权限。
 - 具备 `bash` 和 `systemd` 的系统环境。
 - 已适配：`CentOS 7.6`、`Debian 12`、`Ubuntu 24.04.1 LTS`。
 
@@ -17,7 +17,7 @@
 ```bash
 git clone https://gh-proxy.com/https://github.com/nelvko/clash-for-linux-install.git \
   && cd clash-for-linux-install \
-  && sudo bash -c '. install.sh; exec bash'
+  &&  bash -c '. install.sh; exec bash'
 ```
 
 > 如遇问题，请在查阅[常见问题](#常见问题)及 [issue](https://github.com/nelvko/clash-for-linux-install/issues?q=is%3Aissue) 未果后进行反馈。
@@ -125,7 +125,7 @@ $ clashmixin -r
 以下为通用命令，`root` 用户可直接使用： `. uninstall.sh`。
 
 ```bash
-sudo bash -c '. uninstall.sh; exec bash'
+ bash -c '. uninstall.sh; exec bash'
 ```
 
 ## 常见问题

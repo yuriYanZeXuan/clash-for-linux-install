@@ -2,7 +2,7 @@
 # shellcheck disable=SC2155
 # clash快捷指令
 function clashon() {
-    sudo service clash start && _okcat '已开启代理环境' ||
+     service clash start && _okcat '已开启代理环境' ||
         _failcat '启动失败: 执行 "systemctl status clash" 查看日志' || return 1
     _get_port
     local proxy_addr=http://127.0.0.1:${PROXY_PORT}
@@ -13,7 +13,7 @@ function clashon() {
 }
 
 function clashoff() {
-    sudo service clash stop && _okcat '已关闭代理环境' ||
+     service clash stop && _okcat '已关闭代理环境' ||
         _failcat '关闭失败: 执行 "systemctl status clash" 查看日志' || return 1
     unset http_proxy
     unset https_proxy
@@ -55,18 +55,18 @@ function clashui() {
 
 _merge_config_restart() {
     _valid_config "$CLASH_CONFIG_MIXIN" || _error_quit "Mixin 配置验证失败，请检查"
-    sudo "$BIN_YQ" -n "load(\"$CLASH_CONFIG_RAW\") * load(\"$CLASH_CONFIG_MIXIN\")" | sudo tee "$CLASH_CONFIG_RUNTIME" >&/dev/null && clashrestart
+     "$BIN_YQ" -n "load(\"$CLASH_CONFIG_RAW\") * load(\"$CLASH_CONFIG_MIXIN\")" |  tee "$CLASH_CONFIG_RUNTIME" >&/dev/null && clashrestart
 }
 
 function clashsecret() {
     case "$#" in
     0)
-        _okcat "当前密钥：$(sudo "$BIN_YQ" '.secret // ""' "$CLASH_CONFIG_RUNTIME")"
+        _okcat "当前密钥：$( "$BIN_YQ" '.secret // ""' "$CLASH_CONFIG_RUNTIME")"
         ;;
     1)
         local secret=$1
         [ -z "$secret" ] && secret=\"\"
-        sudo "$BIN_YQ" -i ".secret = $secret" "$CLASH_CONFIG_MIXIN"
+         "$BIN_YQ" -i ".secret = $secret" "$CLASH_CONFIG_MIXIN"
         _merge_config_restart
         _okcat "密钥更新成功，已重启生效"
         ;;
@@ -77,20 +77,20 @@ function clashsecret() {
 }
 
 _tunstatus() {
-    local status=$(sudo "$BIN_YQ" '.tun.enable' "${CLASH_CONFIG_RUNTIME}")
+    local status=$( "$BIN_YQ" '.tun.enable' "${CLASH_CONFIG_RUNTIME}")
     # shellcheck disable=SC2015
     [ "$status" = 'true' ] && _okcat 'Tun 状态：启用' || _failcat 'Tun 状态：关闭'
 }
 
 _tunoff() {
     _tunstatus >/dev/null || return 0
-    sudo "$BIN_YQ" -i '.tun.enable = false' "$CLASH_CONFIG_MIXIN"
+     "$BIN_YQ" -i '.tun.enable = false' "$CLASH_CONFIG_MIXIN"
     _merge_config_restart && _okcat "Tun 模式已关闭"
 }
 
 _tunon() {
     _tunstatus 2>/dev/null && return 0
-    sudo "$BIN_YQ" -i '.tun.enable = true' "$CLASH_CONFIG_MIXIN"
+     "$BIN_YQ" -i '.tun.enable = true' "$CLASH_CONFIG_MIXIN"
     _merge_config_restart
     service clash status | grep -qs 'unsupported kernel version' && {
         _tunoff >&/dev/null
@@ -139,28 +139,28 @@ function clashupdate() {
 
     # 如果是自动更新模式，则设置定时任务
     [ "$is_auto" = true ] && {
-        sudo grep -qs 'clashupdate' "$CLASH_CRON_TAB" || echo "0 0 */2 * * . $BASHRC;clashupdate $url" | sudo tee -a "$CLASH_CRON_TAB" >&/dev/null
+         grep -qs 'clashupdate' "$CLASH_CRON_TAB" || echo "0 0 */2 * * . $BASHRC;clashupdate $url" |  tee -a "$CLASH_CRON_TAB" >&/dev/null
         _okcat "定时任务设置成功" && return 0
     }
-    sudo cat "$CLASH_CONFIG_RAW" | sudo tee "$CLASH_CONFIG_RAW_BAK" >&/dev/null
+     cat "$CLASH_CONFIG_RAW" |  tee "$CLASH_CONFIG_RAW_BAK" >&/dev/null
     _download_config "$url" "$CLASH_CONFIG_RAW"
 
     # 校验并更新配置
     _valid_config "$CLASH_CONFIG_RAW" || _download_convert_config "$CLASH_CONFIG_RAW"
     _valid_config "$CLASH_CONFIG_RAW" || {
-        echo "$(date +"%Y-%m-%d %H:%M:%S") 配置更新失败 ❌ $url" | sudo tee -a "${CLASH_UPDATE_LOG}" >&/dev/null
-        sudo cat "$CLASH_CONFIG_RAW_BAK" | sudo tee "$CLASH_CONFIG_RAW" >&/dev/null
+        echo "$(date +"%Y-%m-%d %H:%M:%S") 配置更新失败 ❌ $url" |  tee -a "${CLASH_UPDATE_LOG}" >&/dev/null
+         cat "$CLASH_CONFIG_RAW_BAK" |  tee "$CLASH_CONFIG_RAW" >&/dev/null
         _error_quit '下载失败或配置无效：已回滚配置'
     }
     _merge_config_restart && _okcat '配置更新成功，已重启生效'
-    echo "$url" | sudo tee "$CLASH_CONFIG_URL" >&/dev/null
-    echo "$(date +"%Y-%m-%d %H:%M:%S") 配置更新成功 ✅ $url" | sudo tee -a "${CLASH_UPDATE_LOG}" >&/dev/null
+    echo "$url" |  tee "$CLASH_CONFIG_URL" >&/dev/null
+    echo "$(date +"%Y-%m-%d %H:%M:%S") 配置更新成功 ✅ $url" |  tee -a "${CLASH_UPDATE_LOG}" >&/dev/null
 }
 
 function clashmixin() {
     case "$1" in
     -e)
-        sudo vim "$CLASH_CONFIG_MIXIN" && {
+         vim "$CLASH_CONFIG_MIXIN" && {
             _merge_config_restart && _okcat "配置更新成功，已重启生效"
         }
         ;;

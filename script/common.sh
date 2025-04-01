@@ -64,9 +64,9 @@ function _get_os() {
 }
 
 function _get_port() {
-    local port=$(sudo $BIN_YQ '.port // ""' $CLASH_CONFIG_RUNTIME)
-    local mixed_port=$(sudo $BIN_YQ '.mixed-port // ""' $CLASH_CONFIG_RUNTIME)
-    local external_port=$(sudo $BIN_YQ '.external-controller // ""' $CLASH_CONFIG_RUNTIME | cut -d':' -f2)
+    local port=$( $BIN_YQ '.port // ""' $CLASH_CONFIG_RUNTIME)
+    local mixed_port=$( $BIN_YQ '.mixed-port // ""' $CLASH_CONFIG_RUNTIME)
+    local external_port=$( $BIN_YQ '.external-controller // ""' $CLASH_CONFIG_RUNTIME | cut -d':' -f2)
 
     PROXY_PORT="${mixed_port:-${port:-7890}}"
     UI_PORT=${external_port:-9090}
@@ -127,7 +127,7 @@ _download_clash() {
 }
 
 function _valid_env() {
-    [ "$(whoami)" != "root" ] && _error_quit "需要 root 或 sudo 权限执行"
+    [ "$(whoami)" != "root" ] && _error_quit "需要 root 或  权限执行"
     [ "$(ps -p $$ -o comm=)" != "bash" ] && _error_quit "当前终端不是 bash"
     # [ "$(ps -p 1 -o comm=)" != "systemd" ] && _error_quit "系统不具备 systemd"
 }
@@ -146,13 +146,13 @@ function _download_config() {
     local url=$1
     local output=$2
     local agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0'
-    sudo curl --connect-timeout 4 \
+     curl --connect-timeout 4 \
         --retry 1 \
         --user-agent "$agent" \
         -k \
         -o "$output" \
         "$url" ||
-        sudo wget --timeout=5 \
+         wget --timeout=5 \
             --tries=1 \
             --user-agent="$agent" \
             --no-check-certificate \
@@ -185,9 +185,9 @@ _start_convert() {
     local bin_path="${BIN_SUBCONVERTER}"
     [ ! -e "$bin_path" ] && bin_path="${TEMP_BIN}/subconverter/subconverter"
     # 子shell运行，屏蔽kill时的输出
-    (sudo ${bin_path} >&/dev/null &)
+    ( ${bin_path} >&/dev/null &)
     local start=$(date +%s%3N)
-    while ! sudo lsof -i :25500 >&/dev/null; do
+    while !  lsof -i :25500 >&/dev/null; do
         sleep 0.05
         local now=$(date +%s%3N)
         [ $(("$now" - "$start")) -gt 500 ] && _error_quit '订阅转换服务未启动，请检查25500端口是否被占用'
