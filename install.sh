@@ -1,8 +1,9 @@
 #!/bin/bash
 # shellcheck disable=SC1091
+apt-get install -y bsdmainutils
 . script/common.sh
 . script/clashctl.sh
-
+echo "install begin"
 _valid_env
 _get_os
 
@@ -32,23 +33,53 @@ tar -xf $ZIP_YQ -C "${TEMP_BIN}" && install -m +x ${TEMP_BIN}/yq_* "$BIN_YQ"
 
 _merge_config_restart
 
-cat <<EOF >/etc/systemd/system/clash.service
-[Unit]
-Description=Clash 守护进程, Go 语言实现的基于规则的代理.
-After=network-online.target
+cat <<EOF >/etc/init.d/clash
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          clash
+# Required-Start:    \$network \$remote_fs \$syslog
+# Required-Stop:     \$network \$remote_fs \$syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Clash Daemon
+# Description:       Clash 守护进程, Go 语言实现的基于规则的代理.
+### END INIT INFO
 
-[Service]
-Type=simple
-Restart=always
-ExecStart=${BIN_CLASH} -d ${CLASH_BASE_DIR} -f ${CLASH_CONFIG_RUNTIME}
+DAEMON="${BIN_CLASH}"
+DAEMON_OPTS="-d ${CLASH_BASE_DIR} -f ${CLASH_CONFIG_RUNTIME}"
+NAME="clash"
+DESC="Clash Daemon"
+PIDFILE="/var/run/\$NAME.pid"
 
-[Install]
-WantedBy=multi-user.target
+case "\$1" in
+    start)
+        echo "Starting \$DESC"
+        start-stop-daemon --start --background --make-pidfile --pidfile \$PIDFILE --exec \$DAEMON -- \$DAEMON_OPTS
+        ;;
+    stop)
+        echo "Stopping \$DESC"
+        start-stop-daemon --stop --pidfile \$PIDFILE --exec \$DAEMON
+        rm -f \$PIDFILE
+        ;;
+    restart)
+        \$0 stop
+        sleep 1
+        \$0 start
+        ;;
+    *)
+        echo "Usage: \$0 {start|stop|restart}"
+        exit 1
+        ;;
+esac
+exit 0
 EOF
 
+chmod +x /etc/init.d/clash
+
 echo "source $CLASH_BASE_DIR/script/common.sh && source $CLASH_BASE_DIR/script/clashctl.sh" >>"$BASHRC"
-systemctl daemon-reload
-# shellcheck disable=SC2015
-systemctl enable clash >&/dev/null && _okcat "已设置开机自启" || _failcat "设置自启失败"
+
+# 添加开机自启
+update-rc.d clash defaults >&/dev/null && _okcat "已设置开机自启" || _failcat "设置自启失败"
+
 clashon && clashui
 clash
